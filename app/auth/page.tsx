@@ -13,16 +13,19 @@ import { Mail, Lock, ArrowLeft } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { AuthRepository } from "./data/repositories/AuthRepository"
 import { toast } from "sonner"
+import { ErrorPopupCard } from "@/components/ui/error-popup-card"
 
 export default function AuthPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("login")
+  const [error, setError] = useState<string | null>(null)
   const authRepository = new AuthRepository()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
 
     const formData = new FormData(e.target as HTMLFormElement)
     const email = formData.get("email") as string
@@ -44,15 +47,28 @@ export default function AuthPage() {
           toast.success("Registration successful! Please login.")
           setActiveTab("login")
         } else {
-          toast.error("Oops! Registration failed", {
-            description: response.errorMessage || "Please try again later"
-          })
+          setError(response.errorMessage || "Registration failed. Please try again later.")
         }
       }
     } catch (error) {
-      toast.error("Oops! Something went wrong", {
-        description: error instanceof Error ? error.message : "Please try again later"
-      })
+      if (error instanceof Error) {
+        const errorMessage = error.message
+        // Check if the error message contains the JSON response
+        if (errorMessage.includes("errorMessage")) {
+          try {
+            // Extract the JSON part from the error message
+            const jsonStr = errorMessage.substring(errorMessage.indexOf("{"))
+            const errorJson = JSON.parse(jsonStr)
+            setError(errorJson.errorMessage)
+          } catch {
+            setError("Something went wrong. Please try again later.")
+          }
+        } else {
+          setError(errorMessage)
+        }
+      } else {
+        setError("Something went wrong. Please try again later.")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -60,15 +76,19 @@ export default function AuthPage() {
 
   const handleGoogleLogin = () => {
     setIsLoading(true)
+    setError(null)
     // TODO: Implement Google OAuth
-    toast.error("Oops! Google login not available", {
-      description: "Please use email and password to login"
-    })
+    setError("Google login is not available. Please use email and password to login.")
     setIsLoading(false)
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center p-4">
+      <ErrorPopupCard
+        message={error || ""}
+        isVisible={!!error}
+        onClose={() => setError(null)}
+      />
       <div className="absolute top-4 left-4 right-4 flex justify-between">
         <Link
           href="/"
