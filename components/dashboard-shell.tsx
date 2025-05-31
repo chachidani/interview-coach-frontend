@@ -1,12 +1,22 @@
 import type React from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
 
 interface DashboardShellProps {
   children: React.ReactNode
 }
 
 export function DashboardShell({ children }: DashboardShellProps) {
+  const router = useRouter()
+
+  const handleLogout = () => {
+    // Remove token cookie
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
+    router.push('/auth')
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b bg-background">
@@ -30,6 +40,13 @@ export function DashboardShell({ children }: DashboardShellProps) {
               Settings
             </Link>
             <ThemeToggle />
+            <Button
+              variant="outline"
+              onClick={handleLogout}
+              className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+            >
+              Logout
+            </Button>
           </nav>
         </div>
       </header>

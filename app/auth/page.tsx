@@ -33,7 +33,8 @@ export default function AuthPage() {
       if (activeTab === "login") {
         const response = await authRepository.login({ email, password })
         if (response.token) {
-          localStorage.setItem("token", response.token)
+          // Store token in secure cookie
+          document.cookie = `token=${response.token}; path=/; secure; samesite=strict; max-age=2592000` // 30 days
           toast.success("Login successful!")
           router.push("/dashboard")
         }
